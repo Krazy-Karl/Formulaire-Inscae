@@ -1,0 +1,382 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Fiche d'inscription MCI</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root {
+  color-scheme: light;
+  --bg: #EEF1F5; --surface: #FFFFFF; --field: #F6F8FB; --ink: #16212C; --muted: #55646F; --line: #D1D9E1;
+  --accent: #1C3F94; --accent-ink: #FFFFFF; --ok: #1B7447; --warn: #9F4219; --focus: #3B6FE0;
+  --f-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-head: "IBM Plex Sans Condensed", "IBM Plex Sans", system-ui, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg: #0E151D; --surface: #16202B; --field: #101923; --ink: #E7EDF3; --muted: #9AA9B8;
+    --line: #2B3947; --accent: #8FB0F5; --accent-ink: #0B1626; --ok: #5FCB92; --warn: #F0A173; --focus: #8FB0F5;
+  }
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 16px; line-height: 1.5;
+  padding-block: 28px 56px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+[hidden] { display: none !important; }
+.wrap { max-width: 640px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+.wrap > * { min-width: 0; }
+.eyebrow { font-family: var(--f-mono); font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin: 0 0 6px; }
+h1 { font-family: var(--f-head); font-weight: 600; font-size: 36px; line-height: 1.05; letter-spacing: -0.01em; margin: 0 0 10px; text-wrap: balance; }
+.lead { margin: 0; color: var(--muted); max-width: 52ch; }
+.stamp { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; border: 1.5px dashed var(--accent); color: var(--accent); padding: 10px 14px; border-radius: 6px; font-family: var(--f-mono); font-size: 13px; }
+.stamp strong { font-weight: 500; }
+.stamp.closed { border-color: var(--warn); color: var(--warn); }
+.note { font-size: 14px; color: var(--muted); border-left: 3px solid var(--line); padding: 2px 0 2px 12px; margin: 0; }
+.banner { padding: 12px 14px; border-radius: 6px; border: 1px solid var(--line); background: var(--surface); font-size: 15px; }
+.banner.warn { border-color: var(--warn); color: var(--warn); }
+.banner.ok { border-color: var(--ok); color: var(--ok); }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 20px 18px; }
+form { display: flex; flex-direction: column; gap: 22px; }
+fieldset { border: 0; padding: 0; margin: 0; min-width: 0; display: flex; flex-direction: column; gap: 14px; }
+fieldset[disabled] { opacity: 0.55; }
+.sec { font-family: var(--f-mono); font-size: 12px; font-weight: 400; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin: 0; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
+.field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+label, .lab { font-size: 14px; font-weight: 500; }
+.hint { font-size: 13px; color: var(--muted); font-weight: 400; margin: 0; }
+.row { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; }
+input[type=text], input[type=email], input[type=tel], input[type=date], input[type=password], select, textarea {
+  width: 100%; font: inherit; font-size: 16px; color: var(--ink); background: var(--field);
+  border: 1px solid var(--line); border-radius: 6px; padding: 11px 12px; min-width: 0;
+}
+textarea { resize: vertical; min-height: 76px; }
+input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+[aria-invalid="true"] { border-color: var(--warn); }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { position: relative; }
+.chip input { position: absolute; opacity: 0; inset: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; }
+.chip span { display: inline-block; padding: 10px 16px; border: 1px solid var(--line); border-radius: 6px; background: var(--field); font-size: 15px; }
+.chip input:checked + span { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.chip input:focus-visible + span { outline: 2px solid var(--focus); outline-offset: 2px; }
+.pad-wrap { position: relative; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; background: #fff; }
+.pad-wrap canvas { display: block; width: 100%; height: auto; aspect-ratio: 10 / 3; touch-action: none; cursor: crosshair; }
+.pad-wrap::after { content: ""; position: absolute; left: 6%; right: 6%; bottom: 24%; border-top: 1px solid #C5CCD6; pointer-events: none; }
+.pad-tools { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.check { display: flex; gap: 10px; align-items: flex-start; font-weight: 400; font-size: 15px; }
+.check input { width: 20px; height: 20px; margin-top: 2px; flex: none; accent-color: var(--accent); }
+button { font: inherit; cursor: pointer; border-radius: 6px; }
+.btn { background: var(--accent); color: var(--accent-ink); border: 1px solid var(--accent); padding: 13px 18px; font-weight: 600; font-size: 16px; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn.ghost { background: transparent; color: var(--ink); border-color: var(--line); font-weight: 500; font-size: 14px; padding: 8px 12px; }
+.errors { margin: 0; padding: 12px 14px 12px 32px; border: 1px solid var(--warn); border-radius: 6px; color: var(--warn); font-size: 14px; }
+.done h2 { font-family: var(--f-head); font-size: 24px; margin: 0 0 4px; }
+.done p { margin: 0 0 14px; color: var(--muted); }
+@media (max-width: 420px) { h1 { font-size: 31px; } .card { padding: 18px 14px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <p class="eyebrow">MCI · Master 2 · 2026-2027</p>
+    <h1>Fiche d'inscription</h1>
+    <p class="lead">Choisissez votre nom, vérifiez vos informations, puis signez dans le cadre prévu.</p>
+  </header>
+
+  <div class="stamp" id="stamp">
+    <span>Date limite</span>
+    <strong>lundi 16 novembre 2026, 23 h 59</strong>
+    <span id="countdown"></span>
+  </div>
+
+  <p class="note">Votre fiche et votre signature sont enregistrées dans un tableau privé, accessible uniquement à l'organisateur.</p>
+
+  <div class="banner" id="banner" hidden></div>
+
+  <section class="card done" id="done" hidden aria-live="polite">
+    <h2>Fiche envoyée</h2>
+    <p>Merci, votre fiche a bien été enregistrée. Vous pouvez fermer cette page. En cas d'erreur, renvoyez une fiche corrigée avant la date limite : la dernière envoyée fait foi.</p>
+    <button class="btn ghost" type="button" id="againBtn">Envoyer une fiche corrigée</button>
+  </section>
+
+  <form class="card" id="form" novalidate>
+    <fieldset id="fs">
+      <h2 class="sec">0. Accès</h2>
+      <div class="field">
+        <label for="code">Code d'accès</label>
+        <input type="password" id="code" autocomplete="off" required>
+        <p class="hint">Le code vous a été donné par l'organisateur.</p>
+      </div>
+
+      <h2 class="sec">1. Identité</h2>
+      <div class="field">
+        <label for="student">Votre nom dans la liste</label>
+        <select id="student" required><option value="">Choisissez votre nom</option></select>
+      </div>
+      <p class="hint">Vérifiez ces informations et corrigez-les si elles sont erronées.</p>
+      <div class="row">
+        <div class="field"><label for="matricule">Matricule</label><input type="text" id="matricule" autocomplete="off" required></div>
+        <div class="field"><label for="nom">Nom</label><input type="text" id="nom" autocomplete="family-name" required></div>
+      </div>
+      <div class="field"><label for="prenoms">Prénoms</label><input type="text" id="prenoms" autocomplete="given-name" required></div>
+      <div class="field">
+        <span class="lab" id="civLab">Civilité</span>
+        <div class="chips" role="radiogroup" aria-labelledby="civLab">
+          <label class="chip"><input type="radio" name="civilite" value="Monsieur"><span>Monsieur</span></label>
+          <label class="chip"><input type="radio" name="civilite" value="Madame"><span>Madame</span></label>
+          <label class="chip"><input type="radio" name="civilite" value="Mademoiselle"><span>Mademoiselle</span></label>
+        </div>
+      </div>
+      <div class="field">
+        <span class="lab" id="genLab">Genre</span>
+        <div class="chips" role="radiogroup" aria-labelledby="genLab">
+          <label class="chip"><input type="radio" name="genre" value="Masculin"><span>Masculin</span></label>
+          <label class="chip"><input type="radio" name="genre" value="Féminin"><span>Féminin</span></label>
+        </div>
+      </div>
+      <div class="row">
+        <div class="field"><label for="naissance">Date de naissance</label><input type="date" id="naissance" required></div>
+        <div class="field"><label for="lieu">Lieu de naissance</label><input type="text" id="lieu" autocomplete="off" required></div>
+      </div>
+
+      <h2 class="sec">2. Coordonnées</h2>
+      <div class="row">
+        <div class="field"><label for="email">Email</label><input type="email" id="email" autocomplete="email" inputmode="email" required></div>
+        <div class="field"><label for="tel">Téléphone</label><input type="tel" id="tel" autocomplete="tel" inputmode="tel" placeholder="034 00 000 00" required></div>
+      </div>
+      <div class="field"><label for="adresse">Adresse</label><textarea id="adresse" autocomplete="street-address" required></textarea></div>
+
+      <h2 class="sec">3. Signature</h2>
+      <div class="field">
+        <span class="lab" id="sigLab">Signature de l'étudiant(e)</span>
+        <p class="hint">Signez avec le doigt ou la souris.</p>
+        <div class="pad-wrap"><canvas id="sig" width="800" height="240" aria-labelledby="sigLab"></canvas></div>
+        <div class="pad-tools">
+          <span class="hint" id="sigState">Aucune signature pour l'instant.</span>
+          <button type="button" class="btn ghost" id="clearSig">Effacer</button>
+        </div>
+      </div>
+      <label class="check" for="certify"><input type="checkbox" id="certify"><span>Je certifie que les informations ci-dessus sont exactes.</span></label>
+
+      <ul class="errors" id="errors" hidden></ul>
+      <button class="btn" type="submit" id="submit">Envoyer ma fiche</button>
+    </fieldset>
+  </form>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  // Colle ici l'adresse du déploiement Apps Script (elle se termine par /exec).
+  var SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxny768ZbD97nbIq9KGXD8NwMwp5uQs93P2VR1OdiZpzKVGjpLX-FNxi9f3Jo0eF_3n5Q/exec";
+  var DEADLINE = new Date("2026-11-16T23:59:59+03:00");
+  var STUDENTS = [
+    ["MCI 19 295","ANDRIAMAMBAZAFY","Ratsisa Mendrika"],
+    ["MCI 19 296","ANDRIAMANANTSOA","Natana Tsiresy"],
+    ["MCI 19 297","ANDRIAMIHAJARIVELO","Mitia Fanambinantsoa Jedidiah Renée"],
+    ["MCI 19 298","ANDRIAMIHARISOA","Diana Sambalis"],
+    ["MCI 19 299","ANDRIAMIRIJANIAINA","Harena Marie Andréa"],
+    ["MCI 19 300","ANDRIANARY","Antsosoa Holy Marine"],
+    ["MCI 19 301","ANDRIATIANARIVO","Kevin Hobiniaina"],
+    ["MCI 19 302","FANOMEZANTSOA","Ludovic Charlie"],
+    ["MCI 19 303","FENO MAYENARD","Ligyo"],
+    ["MCI 19 304","HARIOELA","Hajasoa Marc"],
+    ["MCI 19 305","NOMENJANAHARY","Anaique Pascale"],
+    ["MCI 19 306","RABEMANANJARA","Ilo"],
+    ["MCI 19 307","RABIAZAMAHOLY","Razanatseheno Andrianina"],
+    ["MCI 19 308","RAHARILANTO","Mialy Tiana"],
+    ["MCI 19 309","RAHARIZAKA","Mialy Ny Fiononana"],
+    ["MCI 19 310","RAKOTOARIZAORO","Hasinjato Vahatraniaina"],
+    ["MCI 19 311","RAKOTONIRIKO","Fitia Ny Aina"],
+    ["MCI 19 312","RAMAHARAVO","Fenomanana Irina"],
+    ["MCI 19 313","RAMANANJANAHARY","Anjara Kanto Ny Voahary"],
+    ["MCI 19 314","RAMANANTSOA","Marie Yohna Maholy"],
+    ["MCI 19 315","RAMANANTSOA","Ulric Mickaël"],
+    ["MCI 19 316","RAMASIMANANA","Valisoa"],
+    ["MCI 19 317","RAMBELOJAONA","Fitia Sarobidy"],
+    ["MCI 19 318","RAMILIARISONA","Hanitriniaina Mendrika"],
+    ["MCI 19 319","RANDRIAMANANTENA","Johary Fabien Mickaël"],
+    ["MCI 19 320","RANDRIANARIMANANA","Mihaingo Tiana"],
+    ["MCI 19 321","RANDRIANARISON","Winnie Leslie Sylvia"],
+    ["MCI 19 322","RANDRIANARITIANA","Falihery Karl"],
+    ["MCI 19 323","RANDRIANIAINASOA","Tsirikanto Nancy"],
+    ["MCI 19 324","RASAMINDISA","Toavina Nirina Mampianina"],
+    ["MCI 19 325","RASOLOFOMANANA","Nomena Finoana"],
+    ["MCI 19 326","RATOMAHENINA","Tsiory Tanteliniaina"],
+    ["MCI 19 327","RATSIMBAZAFY","Andrianina Tsihoarana"],
+    ["MCI 19 328","RAVAHATRA","Ainamalala Murielle"],
+    ["MCI 19 329","RAVELOARIJAONA","Faniry Nicole"],
+    ["MCI 19 330","RAVELOJAONA","Andriantsoa Fanaiky"],
+    ["MCI 19 331","RAZAFINDRAKOTO","Arizay Tompoina"],
+    ["MR 227","RAKOTONIRINA","Ny Aina Onintsoa"]
+  ];
+
+  function $(id) { return document.getElementById(id); }
+  var hasInk = false, closed = false, sending = false;
+
+  /* liste des étudiants */
+  var sel = $("student");
+  STUDENTS.forEach(function (s, i) {
+    var o = document.createElement("option");
+    o.value = String(i);
+    o.textContent = s[0] + " · " + s[1] + " " + s[2];
+    sel.appendChild(o);
+  });
+  var other = document.createElement("option");
+  other.value = "other";
+  other.textContent = "Mon nom n'est pas dans la liste";
+  sel.appendChild(other);
+  sel.addEventListener("change", function () {
+    var s = STUDENTS[sel.value];
+    $("matricule").value = s ? s[0] : "";
+    $("nom").value = s ? s[1] : "";
+    $("prenoms").value = s ? s[2] : "";
+  });
+
+  /* date limite */
+  function banner(msg, kind) {
+    var b = $("banner");
+    if (!msg) { b.hidden = true; return; }
+    b.className = "banner" + (kind ? " " + kind : "");
+    b.textContent = msg;
+    b.hidden = false;
+  }
+  function updateDeadline() {
+    var left = DEADLINE.getTime() - Date.now();
+    closed = left <= 0;
+    if (closed) {
+      $("countdown").textContent = "Formulaire fermé";
+      $("stamp").classList.add("closed");
+      banner("Le formulaire est fermé depuis le lundi 16 novembre 2026.", "warn");
+    } else {
+      var d = Math.floor(left / 86400000), h = Math.floor((left % 86400000) / 3600000);
+      $("countdown").textContent = d >= 1 ? "(il reste " + d + " jour" + (d > 1 ? "s" : "") + ")" : "(il reste " + h + " h)";
+    }
+    $("fs").disabled = closed || sending;
+  }
+  updateDeadline();
+  if (SCRIPT_URL.indexOf("https://") !== 0) {
+    banner("Ce formulaire n'est pas encore configuré : l'adresse du script n'a pas été ajoutée.", "warn");
+  }
+
+  /* signature */
+  var pad = $("sig"), ctx = pad.getContext("2d"), drawing = false, last = null;
+  function sigState() { $("sigState").textContent = hasInk ? "Signature prête." : "Aucune signature pour l'instant."; }
+  function resetPad() {
+    ctx.fillStyle = "#FFFFFF"; ctx.fillRect(0, 0, pad.width, pad.height);
+    ctx.strokeStyle = "#12286B"; ctx.lineWidth = 3.4; ctx.lineCap = "round"; ctx.lineJoin = "round";
+    hasInk = false; sigState();
+  }
+  function pt(e) {
+    var r = pad.getBoundingClientRect();
+    return { x: (e.clientX - r.left) * pad.width / r.width, y: (e.clientY - r.top) * pad.height / r.height };
+  }
+  pad.addEventListener("pointerdown", function (e) {
+    if ($("fs").disabled) return;
+    e.preventDefault(); drawing = true;
+    try { pad.setPointerCapture(e.pointerId); } catch (x) {}
+    last = pt(e);
+    ctx.beginPath(); ctx.moveTo(last.x, last.y); ctx.lineTo(last.x + 0.01, last.y); ctx.stroke();
+    hasInk = true; sigState();
+  });
+  pad.addEventListener("pointermove", function (e) {
+    if (!drawing) return;
+    e.preventDefault();
+    var p = pt(e);
+    ctx.beginPath(); ctx.moveTo(last.x, last.y); ctx.lineTo(p.x, p.y); ctx.stroke();
+    last = p;
+  });
+  function endStroke() { drawing = false; last = null; }
+  pad.addEventListener("pointerup", endStroke);
+  pad.addEventListener("pointercancel", endStroke);
+  $("clearSig").addEventListener("click", resetPad);
+  resetPad();
+
+  function radio(name) { var r = document.querySelector('input[name="' + name + '"]:checked'); return r ? r.value : ""; }
+
+  /* envoi */
+  $("form").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    if (sending) return;
+    updateDeadline();
+    var errs = [], bad = [];
+    function need(ok, msg, el) { if (!ok) { errs.push(msg); if (el) bad.push(el); } }
+    var s = STUDENTS[sel.value];
+    var code = $("code").value.trim();
+    var mat = $("matricule").value.trim(), nom = $("nom").value.trim(), pren = $("prenoms").value.trim();
+    var civ = radio("civilite"), gen = radio("genre");
+    var naiss = $("naissance").value, lieu = $("lieu").value.trim();
+    var mail = $("email").value.trim(), tel = $("tel").value.replace(/[\s.\-]/g, ""), adr = $("adresse").value.trim();
+    need(!!code, "Saisissez le code d'accès.", $("code"));
+    need(sel.value !== "", "Choisissez votre nom dans la liste, ou « Mon nom n'est pas dans la liste ».", sel);
+    need(!!mat, "Indiquez votre matricule.", $("matricule"));
+    need(!!nom, "Indiquez votre nom.", $("nom"));
+    need(!!pren, "Indiquez vos prénoms.", $("prenoms"));
+    need(!!civ, "Choisissez votre civilité.");
+    need(!!gen, "Choisissez votre genre.");
+    var nd = naiss ? new Date(naiss + "T00:00:00Z") : null;
+    need(nd && nd.getTime() < Date.now() && nd.getUTCFullYear() > 1940, "Indiquez une date de naissance valide.", $("naissance"));
+    need(!!lieu, "Indiquez votre lieu de naissance.", $("lieu"));
+    need(/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(mail), "Indiquez une adresse email valide.", $("email"));
+    need(/^\+?\d{9,13}$/.test(tel), "Indiquez un numéro de téléphone valide (9 à 13 chiffres).", $("tel"));
+    need(!!adr, "Indiquez votre adresse.", $("adresse"));
+    need(hasInk, "Signez dans le cadre prévu.");
+    need($("certify").checked, "Cochez la case de certification.", $("certify"));
+    ["code","student","matricule","nom","prenoms","naissance","lieu","email","tel","adresse"].forEach(function (id) { $(id).removeAttribute("aria-invalid"); });
+    bad.forEach(function (el) { el.setAttribute("aria-invalid", "true"); });
+    var box = $("errors");
+    if (closed) errs = ["Le formulaire est fermé depuis le lundi 16 novembre 2026."];
+    if (SCRIPT_URL.indexOf("https://") !== 0) errs = ["Le formulaire n'est pas encore configuré."];
+    if (errs.length) {
+      box.textContent = "";
+      errs.forEach(function (m) { var li = document.createElement("li"); li.textContent = m; box.appendChild(li); });
+      box.hidden = false; box.scrollIntoView({ block: "nearest" });
+      return;
+    }
+    box.hidden = true;
+    var payload = {
+      code: code, matricule: mat, nom: nom, prenoms: pren,
+      listeMatricule: s ? s[0] : null,
+      corrige: !s || mat !== s[0] || nom !== s[1] || pren !== s[2],
+      civilite: civ, genre: gen, naissance: naiss, lieu: lieu, email: mail, telephone: tel, adresse: adr,
+      signature: pad.toDataURL("image/png")
+    };
+    sending = true; $("fs").disabled = true; $("submit").textContent = "Envoi…";
+    try {
+      var res = await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify(payload) });
+      var out = await res.json();
+      if (out.ok) {
+        banner("");
+        $("form").hidden = true; $("done").hidden = false;
+        window.scrollTo(0, 0);
+      } else if (out.error === "code") {
+        banner("Code d'accès incorrect. Vérifiez-le auprès de l'organisateur.", "warn");
+        $("code").setAttribute("aria-invalid", "true");
+      } else if (out.error === "closed") {
+        banner("Le formulaire est fermé depuis le lundi 16 novembre 2026.", "warn");
+      } else if (out.error === "invalid") {
+        banner("Une information est refusée : " + (out.message || "vérifiez le formulaire") + "", "warn");
+      } else {
+        banner("Le service a rencontré une erreur. Réessayez dans une minute.", "warn");
+      }
+    } catch (err) {
+      banner("L'envoi a échoué. Vérifiez votre connexion puis réessayez.", "warn");
+    } finally {
+      sending = false; $("submit").textContent = "Envoyer ma fiche"; updateDeadline();
+    }
+  });
+
+  $("againBtn").addEventListener("click", function () {
+    $("done").hidden = true; $("form").hidden = false;
+    $("certify").checked = false; resetPad();
+    window.scrollTo(0, 0);
+  });
+})();
+</script>
+</body>
+</html>
