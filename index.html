@@ -65,7 +65,7 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 .chip input:checked + span { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
 .chip input:focus-visible + span { outline: 2px solid var(--focus); outline-offset: 2px; }
 .pad-wrap { position: relative; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; background: #fff; }
-.pad-wrap canvas { display: block; width: 100%; height: auto; aspect-ratio: 10 / 3; touch-action: none; cursor: crosshair; }
+.pad-wrap canvas { display: block; width: 100%; height: auto; aspect-ratio: 2 / 1; touch-action: none; cursor: crosshair; }
 .pad-wrap::after { content: ""; position: absolute; left: 6%; right: 6%; bottom: 24%; border-top: 1px solid #C5CCD6; pointer-events: none; }
 .pad-tools { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
 .check { display: flex; gap: 10px; align-items: flex-start; font-weight: 400; font-size: 15px; }
@@ -155,7 +155,7 @@ button { font: inherit; cursor: pointer; border-radius: 6px; }
       <div class="field">
         <span class="lab" id="sigLab">Signature de l'étudiant(e)</span>
         <p class="hint">Signez avec le doigt ou la souris.</p>
-        <div class="pad-wrap"><canvas id="sig" width="800" height="240" aria-labelledby="sigLab"></canvas></div>
+        <div class="pad-wrap"><canvas id="sig" width="800" height="400" aria-labelledby="sigLab"></canvas></div>
         <div class="pad-tools">
           <span class="hint" id="sigState">Aucune signature pour l'instant.</span>
           <button type="button" class="btn ghost" id="clearSig">Effacer</button>
