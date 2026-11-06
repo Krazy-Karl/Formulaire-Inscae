@@ -122,7 +122,7 @@ button { font: inherit; cursor: pointer; border-radius: 6px; }
       <p class="hint">Vérifiez ces informations et corrigez-les si elles sont erronées.</p>
       <div class="row">
         <div class="field"><label for="matricule">Matricule</label><input type="text" id="matricule" autocomplete="off" required></div>
-        <div class="field"><label for="nom">Nom</label><input type="text" id="nom" autocomplete="family-name" required></div>
+        <div class="field"><label for="nom">Nom</label><input type="text" id="nom" autocomplete="family-name" autocapitalize="characters" style="text-transform: uppercase" required></div>
       </div>
       <div class="field"><label for="prenoms">Prénoms</label><input type="text" id="prenoms" autocomplete="given-name" required></div>
       <div class="field">
@@ -239,6 +239,13 @@ button { font: inherit; cursor: pointer; border-radius: 6px; }
     $("prenoms").value = s ? s[2] : "";
   });
 
+  /* le nom est toujours en majuscules */
+  $("nom").addEventListener("input", function () {
+    var el = this, a = el.selectionStart, b = el.selectionEnd;
+    el.value = el.value.toUpperCase();
+    try { el.setSelectionRange(a, b); } catch (x) {}
+  });
+
   /* date limite */
   function banner(msg, kind) {
     var b = $("banner");
@@ -316,7 +323,7 @@ button { font: inherit; cursor: pointer; border-radius: 6px; }
     function need(ok, msg, el) { if (!ok) { errs.push(msg); if (el) bad.push(el); } }
     var s = STUDENTS[sel.value];
     var code = $("code").value.trim();
-    var mat = $("matricule").value.trim(), nom = $("nom").value.trim(), pren = $("prenoms").value.trim();
+    var mat = $("matricule").value.trim(), nom = $("nom").value.trim().toUpperCase(), pren = $("prenoms").value.trim();
     var civ = radio("civilite"), gen = radio("genre");
     var naiss = $("naissance").value, lieu = $("lieu").value.trim();
     var mail = $("email").value.trim(), tel = $("tel").value.replace(/[\s.\-]/g, ""), adr = $("adresse").value.trim();
