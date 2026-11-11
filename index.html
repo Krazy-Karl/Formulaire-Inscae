@@ -312,6 +312,9 @@ button { font: inherit; cursor: pointer; border-radius: 6px; }
   $("undoSig").addEventListener("click", function () { strokes.pop(); paint(); });
   resetPad();
 
+  // Pour la colonne "Corrigée" : ignore les majuscules et les espaces en trop.
+  function norm(t) { return String(t).replace(/\s+/g, " ").trim().toLowerCase(); }
+
   function radio(name) { var r = document.querySelector('input[name="' + name + '"]:checked'); return r ? r.value : ""; }
 
   /* envoi */
@@ -357,7 +360,7 @@ button { font: inherit; cursor: pointer; border-radius: 6px; }
     var payload = {
       code: code, matricule: mat, nom: nom, prenoms: pren,
       listeMatricule: s ? s[0] : null,
-      corrige: !s || mat !== s[0] || nom !== s[1] || pren !== s[2],
+      corrige: !s || mat !== s[0] || norm(nom) !== norm(s[1]) || norm(pren) !== norm(s[2]),
       civilite: civ, genre: gen, naissance: naiss, lieu: lieu, email: mail, telephone: tel, adresse: adr,
       signature: pad.toDataURL("image/png")
     };
