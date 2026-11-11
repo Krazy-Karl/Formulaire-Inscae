@@ -69,6 +69,7 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 .pad-wrap::after { content: ""; position: absolute; left: 6%; right: 6%; bottom: 24%; border-top: 1px solid #C5CCD6; pointer-events: none; }
 .pad-tools { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
 .btns { display: flex; gap: 8px; }
+.stack { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
 .check { display: flex; gap: 10px; align-items: flex-start; font-weight: 400; font-size: 15px; }
 .check input { width: 20px; height: 20px; margin-top: 2px; flex: none; accent-color: var(--accent); }
 button { font: inherit; cursor: pointer; border-radius: 6px; }
@@ -114,11 +115,14 @@ button { font: inherit; cursor: pointer; border-radius: 6px; }
         <p class="hint">Le code vous a été donné par l'organisateur.</p>
       </div>
 
+      <label class="check" for="sigOnly"><input type="checkbox" id="sigOnly"><span>Je veux seulement refaire ma signature (mes autres informations ne changent pas)</span></label>
+
       <h2 class="sec">1. Identité</h2>
       <div class="field">
         <label for="student">Votre nom dans la liste</label>
         <select id="student" required><option value="">Choisissez votre nom</option></select>
       </div>
+      <div class="stack" id="fullFields">
       <p class="hint">Vérifiez ces informations et corrigez-les si elles sont erronées.</p>
       <div class="row">
         <div class="field"><label for="matricule">Matricule</label><input type="text" id="matricule" autocomplete="off" required></div>
@@ -152,6 +156,8 @@ button { font: inherit; cursor: pointer; border-radius: 6px; }
       </div>
       <div class="field"><label for="adresse">Adresse</label><textarea id="adresse" autocomplete="street-address" required></textarea></div>
 
+      </div>
+
       <h2 class="sec">3. Signature</h2>
       <div class="field">
         <span class="lab" id="sigLab">Signature de l'étudiant(e)</span>
@@ -162,7 +168,7 @@ button { font: inherit; cursor: pointer; border-radius: 6px; }
           <span class="btns"><button type="button" class="btn ghost" id="undoSig">Retour</button><button type="button" class="btn ghost" id="clearSig">Tout effacer</button></span>
         </div>
       </div>
-      <label class="check" for="certify"><input type="checkbox" id="certify"><span>Je certifie que les informations ci-dessus sont exactes.</span></label>
+      <label class="check" id="certifyRow" for="certify"><input type="checkbox" id="certify"><span>Je certifie que les informations ci-dessus sont exactes.</span></label>
 
       <ul class="errors" id="errors" hidden></ul>
       <button class="btn" type="submit" id="submit">Envoyer ma fiche</button>
@@ -318,10 +324,70 @@ button { font: inherit; cursor: pointer; border-radius: 6px; }
   function radio(name) { var r = document.querySelector('input[name="' + name + '"]:checked'); return r ? r.value : ""; }
 
   /* envoi */
+  function submitLabel() { return $("sigOnly").checked ? "Envoyer ma nouvelle signature" : "Envoyer ma fiche"; }
+  $("sigOnly").addEventListener("change", function () {
+    var on = this.checked;
+    $("fullFields").hidden = on; $("certifyRow").hidden = on;
+    $("submit").textContent = submitLabel();
+    $("errors").hidden = true;
+  });
+
+  function showErrors(errs) {
+    var box = $("errors");
+    box.textContent = "";
+    errs.forEach(function (m) { var li = document.createElement("li"); li.textContent = m; box.appendChild(li); });
+    box.hidden = false; box.scrollIntoView({ block: "nearest" });
+  }
+
+  async function post(payload) {
+    sending = true; $("fs").disabled = true; $("submit").textContent = "Envoi…";
+    try {
+      var res = await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify(payload) });
+      var out = await res.json();
+      if (out.ok) {
+        banner("");
+        $("form").hidden = true; $("done").hidden = false;
+        window.scrollTo(0, 0);
+      } else if (out.error === "code") {
+        banner("Code d'accès incorrect. Vérifiez-le auprès de l'organisateur.", "warn");
+        $("code").setAttribute("aria-invalid", "true");
+      } else if (out.error === "closed") {
+        banner("Le formulaire est fermé depuis le lundi 16 novembre 2026.", "warn");
+      } else if (out.error === "notfound") {
+        banner("Aucune fiche trouvée pour ce nom. Remplissez d'abord la fiche complète (décochez « seulement refaire ma signature »).", "warn");
+      } else if (out.error === "invalid") {
+        banner("Une information est refusée : " + (out.message || "vérifiez le formulaire") + "", "warn");
+      } else {
+        banner("Le service a rencontré une erreur. Réessayez dans une minute.", "warn");
+      }
+    } catch (err) {
+      banner("L'envoi a échoué. Vérifiez votre connexion puis réessayez.", "warn");
+    } finally {
+      sending = false; $("submit").textContent = submitLabel(); updateDeadline();
+    }
+  }
+
+  function submitSignatureOnly() {
+    var errs = [], bad = [];
+    var s = STUDENTS[sel.value];
+    var code = $("code").value.trim();
+    if (!code) { errs.push("Saisissez le code d'accès."); bad.push($("code")); }
+    if (!s) { errs.push("Choisissez votre nom dans la liste. Si votre nom n'y est pas, renvoyez la fiche complète."); bad.push(sel); }
+    if (!hasInk) errs.push("Signez dans le cadre prévu.");
+    ["code", "student"].forEach(function (id) { $(id).removeAttribute("aria-invalid"); });
+    bad.forEach(function (el) { el.setAttribute("aria-invalid", "true"); });
+    if (closed) errs = ["Le formulaire est fermé depuis le lundi 16 novembre 2026."];
+    if (SCRIPT_URL.indexOf("https://") !== 0) errs = ["Le formulaire n'est pas encore configuré."];
+    if (errs.length) { showErrors(errs); return; }
+    $("errors").hidden = true;
+    return post({ mode: "signature", code: code, listeMatricule: s[0], signature: pad.toDataURL("image/png") });
+  }
+
   $("form").addEventListener("submit", async function (e) {
     e.preventDefault();
     if (sending) return;
     updateDeadline();
+    if ($("sigOnly").checked) { await submitSignatureOnly(); return; }
     var errs = [], bad = [];
     function need(ok, msg, el) { if (!ok) { errs.push(msg); if (el) bad.push(el); } }
     var s = STUDENTS[sel.value];
@@ -364,29 +430,7 @@ button { font: inherit; cursor: pointer; border-radius: 6px; }
       civilite: civ, genre: gen, naissance: naiss, lieu: lieu, email: mail, telephone: tel, adresse: adr,
       signature: pad.toDataURL("image/png")
     };
-    sending = true; $("fs").disabled = true; $("submit").textContent = "Envoi…";
-    try {
-      var res = await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify(payload) });
-      var out = await res.json();
-      if (out.ok) {
-        banner("");
-        $("form").hidden = true; $("done").hidden = false;
-        window.scrollTo(0, 0);
-      } else if (out.error === "code") {
-        banner("Code d'accès incorrect. Vérifiez-le auprès de l'organisateur.", "warn");
-        $("code").setAttribute("aria-invalid", "true");
-      } else if (out.error === "closed") {
-        banner("Le formulaire est fermé depuis le lundi 16 novembre 2026.", "warn");
-      } else if (out.error === "invalid") {
-        banner("Une information est refusée : " + (out.message || "vérifiez le formulaire") + "", "warn");
-      } else {
-        banner("Le service a rencontré une erreur. Réessayez dans une minute.", "warn");
-      }
-    } catch (err) {
-      banner("L'envoi a échoué. Vérifiez votre connexion puis réessayez.", "warn");
-    } finally {
-      sending = false; $("submit").textContent = "Envoyer ma fiche"; updateDeadline();
-    }
+    await post(payload);
   });
 
   $("againBtn").addEventListener("click", function () {
