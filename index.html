@@ -70,6 +70,11 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 .pad-tools { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
 .btns { display: flex; gap: 8px; }
 .stack { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+details.lookup { border: 1px dashed var(--line); border-radius: 6px; padding: 12px 14px; }
+details.lookup summary { cursor: pointer; font-weight: 500; font-size: 15px; }
+details.lookup[open] summary { margin-bottom: 12px; }
+.lookup-msg.ok { color: var(--ok); }
+.lookup-msg.warn { color: var(--warn); }
 .check { display: flex; gap: 10px; align-items: flex-start; font-weight: 400; font-size: 15px; }
 .check input { width: 20px; height: 20px; margin-top: 2px; flex: none; accent-color: var(--accent); }
 button { font: inherit; cursor: pointer; border-radius: 6px; }
@@ -115,14 +120,23 @@ button { font: inherit; cursor: pointer; border-radius: 6px; }
         <p class="hint">Le code vous a été donné par l'organisateur.</p>
       </div>
 
-      <label class="check" for="sigOnly"><input type="checkbox" id="sigOnly"><span>Je veux seulement refaire ma signature (mes autres informations ne changent pas)</span></label>
-
       <h2 class="sec">1. Identité</h2>
       <div class="field">
         <label for="student">Votre nom dans la liste</label>
         <select id="student" required><option value="">Choisissez votre nom</option></select>
       </div>
-      <div class="stack" id="fullFields">
+      <details class="lookup" id="lookup">
+        <summary>J'ai déjà envoyé ma fiche : la consulter ou la modifier</summary>
+        <div class="stack">
+          <p class="hint">Choisissez votre nom ci-dessus, saisissez le code d'accès tout en haut et votre date de naissance. Votre fiche s'affichera dans le formulaire.</p>
+          <div class="field">
+            <label for="lookupDob">Date de naissance</label>
+            <input type="date" id="lookupDob">
+          </div>
+          <button type="button" class="btn ghost" id="lookupBtn">Retrouver ma fiche</button>
+          <p class="hint lookup-msg" id="lookupMsg" role="status" aria-live="polite"></p>
+        </div>
+      </details>
       <p class="hint">Vérifiez ces informations et corrigez-les si elles sont erronées.</p>
       <div class="row">
         <div class="field"><label for="matricule">Matricule</label><input type="text" id="matricule" autocomplete="off" required></div>
@@ -156,19 +170,18 @@ button { font: inherit; cursor: pointer; border-radius: 6px; }
       </div>
       <div class="field"><label for="adresse">Adresse</label><textarea id="adresse" autocomplete="street-address" required></textarea></div>
 
-      </div>
-
       <h2 class="sec">3. Signature</h2>
       <div class="field">
         <span class="lab" id="sigLab">Signature de l'étudiant(e)</span>
         <p class="hint">Signez avec le doigt ou la souris.</p>
+        <p class="hint" id="keepSig" hidden>Votre signature actuelle est conservée. Signez de nouveau seulement si vous voulez la remplacer.</p>
         <div class="pad-wrap"><canvas id="sig" width="800" height="400" aria-labelledby="sigLab"></canvas></div>
         <div class="pad-tools">
           <span class="hint" id="sigState">Aucune signature pour l'instant.</span>
           <span class="btns"><button type="button" class="btn ghost" id="undoSig">Retour</button><button type="button" class="btn ghost" id="clearSig">Tout effacer</button></span>
         </div>
       </div>
-      <label class="check" id="certifyRow" for="certify"><input type="checkbox" id="certify"><span>Je certifie que les informations ci-dessus sont exactes.</span></label>
+      <label class="check" for="certify"><input type="checkbox" id="certify"><span>Je certifie que les informations ci-dessus sont exactes.</span></label>
 
       <ul class="errors" id="errors" hidden></ul>
       <button class="btn" type="submit" id="submit">Envoyer ma fiche</button>
@@ -224,7 +237,7 @@ button { font: inherit; cursor: pointer; border-radius: 6px; }
   ];
 
   function $(id) { return document.getElementById(id); }
-  var hasInk = false, closed = false, sending = false;
+  var hasInk = false, closed = false, sending = false, loaded = false;
 
   /* liste des étudiants */
   var sel = $("student");
@@ -240,6 +253,7 @@ button { font: inherit; cursor: pointer; border-radius: 6px; }
   sel.appendChild(other);
   sel.addEventListener("change", function () {
     var s = STUDENTS[sel.value];
+    loaded = false; $("keepSig").hidden = true;
     $("matricule").value = s ? s[0] : "";
     $("nom").value = s ? s[1] : "";
     $("prenoms").value = s ? s[2] : "";
@@ -318,76 +332,64 @@ button { font: inherit; cursor: pointer; border-radius: 6px; }
   $("undoSig").addEventListener("click", function () { strokes.pop(); paint(); });
   resetPad();
 
+  /* consulter / modifier une fiche déjà envoyée */
+  function lookupMsg(text, kind) {
+    var el = $("lookupMsg"); el.textContent = text; el.className = "hint lookup-msg" + (kind ? " " + kind : "");
+  }
+  function setRadioValue(name, v) {
+    var all = document.querySelectorAll('input[name="' + name + '"]');
+    for (var i = 0; i < all.length; i++) all[i].checked = (all[i].value === v);
+  }
+  function fillForm(f) {
+    $("matricule").value = f.matricule || ""; $("nom").value = String(f.nom || "").toUpperCase(); $("prenoms").value = f.prenoms || "";
+    setRadioValue("civilite", f.civilite); setRadioValue("genre", f.genre);
+    $("naissance").value = f.naissance || ""; $("lieu").value = f.lieu || "";
+    $("email").value = f.email || ""; $("tel").value = f.telephone || ""; $("adresse").value = f.adresse || "";
+    $("certify").checked = false;
+    resetPad(); loaded = true; $("keepSig").hidden = false;
+  }
+  $("lookupBtn").addEventListener("click", async function () {
+    var s = STUDENTS[sel.value], code = $("code").value.trim(), dob = $("lookupDob").value;
+    var errs = [];
+    if (!code) errs.push("Saisissez le code d'accès tout en haut.");
+    if (!s) errs.push("Choisissez votre nom dans la liste.");
+    if (!dob) errs.push("Indiquez votre date de naissance.");
+    if (closed) errs = ["Le formulaire est fermé depuis le lundi 16 novembre 2026."];
+    if (SCRIPT_URL.indexOf("https://") !== 0) errs = ["Le formulaire n'est pas encore configuré."];
+    if (errs.length) { lookupMsg(errs.join(" "), "warn"); return; }
+    var btn = $("lookupBtn"); btn.disabled = true; btn.textContent = "Recherche…"; lookupMsg("");
+    try {
+      var res = await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ mode: "lookup", code: code, listeMatricule: s[0], naissance: dob }) });
+      var out = await res.json();
+      if (out.ok) {
+        fillForm(out.fiche);
+        lookupMsg("Votre fiche est chargée dans le formulaire ci-dessous. Modifiez ce qui doit l'être, puis envoyez-la.", "ok");
+      } else if (out.error === "code") {
+        lookupMsg("Code d'accès incorrect. Vérifiez-le auprès de l'organisateur.", "warn");
+      } else if (out.error === "locked") {
+        lookupMsg("Trop d'essais pour ce nom. Réessayez dans une heure ou contactez l'organisateur.", "warn");
+      } else if (out.error === "closed") {
+        lookupMsg("Le formulaire est fermé depuis le lundi 16 novembre 2026.", "warn");
+      } else if (out.error === "nomatch") {
+        lookupMsg("Aucune fiche trouvée avec ce nom et cette date de naissance. Vérifiez-les, ou remplissez la fiche si vous ne l'avez pas encore envoyée.", "warn");
+      } else {
+        lookupMsg("Le service a rencontré une erreur. Réessayez dans une minute.", "warn");
+      }
+    } catch (err) {
+      lookupMsg("La recherche a échoué. Vérifiez votre connexion puis réessayez.", "warn");
+    } finally { btn.disabled = false; btn.textContent = "Retrouver ma fiche"; }
+  });
+
   // Pour la colonne "Corrigée" : ignore les majuscules et les espaces en trop.
   function norm(t) { return String(t).replace(/\s+/g, " ").trim().toLowerCase(); }
 
   function radio(name) { var r = document.querySelector('input[name="' + name + '"]:checked'); return r ? r.value : ""; }
 
   /* envoi */
-  function submitLabel() { return $("sigOnly").checked ? "Envoyer ma nouvelle signature" : "Envoyer ma fiche"; }
-  $("sigOnly").addEventListener("change", function () {
-    var on = this.checked;
-    $("fullFields").hidden = on; $("certifyRow").hidden = on;
-    $("submit").textContent = submitLabel();
-    $("errors").hidden = true;
-  });
-
-  function showErrors(errs) {
-    var box = $("errors");
-    box.textContent = "";
-    errs.forEach(function (m) { var li = document.createElement("li"); li.textContent = m; box.appendChild(li); });
-    box.hidden = false; box.scrollIntoView({ block: "nearest" });
-  }
-
-  async function post(payload) {
-    sending = true; $("fs").disabled = true; $("submit").textContent = "Envoi…";
-    try {
-      var res = await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify(payload) });
-      var out = await res.json();
-      if (out.ok) {
-        banner("");
-        $("form").hidden = true; $("done").hidden = false;
-        window.scrollTo(0, 0);
-      } else if (out.error === "code") {
-        banner("Code d'accès incorrect. Vérifiez-le auprès de l'organisateur.", "warn");
-        $("code").setAttribute("aria-invalid", "true");
-      } else if (out.error === "closed") {
-        banner("Le formulaire est fermé depuis le lundi 16 novembre 2026.", "warn");
-      } else if (out.error === "notfound") {
-        banner("Aucune fiche trouvée pour ce nom. Remplissez d'abord la fiche complète (décochez « seulement refaire ma signature »).", "warn");
-      } else if (out.error === "invalid") {
-        banner("Une information est refusée : " + (out.message || "vérifiez le formulaire") + "", "warn");
-      } else {
-        banner("Le service a rencontré une erreur. Réessayez dans une minute.", "warn");
-      }
-    } catch (err) {
-      banner("L'envoi a échoué. Vérifiez votre connexion puis réessayez.", "warn");
-    } finally {
-      sending = false; $("submit").textContent = submitLabel(); updateDeadline();
-    }
-  }
-
-  function submitSignatureOnly() {
-    var errs = [], bad = [];
-    var s = STUDENTS[sel.value];
-    var code = $("code").value.trim();
-    if (!code) { errs.push("Saisissez le code d'accès."); bad.push($("code")); }
-    if (!s) { errs.push("Choisissez votre nom dans la liste. Si votre nom n'y est pas, renvoyez la fiche complète."); bad.push(sel); }
-    if (!hasInk) errs.push("Signez dans le cadre prévu.");
-    ["code", "student"].forEach(function (id) { $(id).removeAttribute("aria-invalid"); });
-    bad.forEach(function (el) { el.setAttribute("aria-invalid", "true"); });
-    if (closed) errs = ["Le formulaire est fermé depuis le lundi 16 novembre 2026."];
-    if (SCRIPT_URL.indexOf("https://") !== 0) errs = ["Le formulaire n'est pas encore configuré."];
-    if (errs.length) { showErrors(errs); return; }
-    $("errors").hidden = true;
-    return post({ mode: "signature", code: code, listeMatricule: s[0], signature: pad.toDataURL("image/png") });
-  }
-
   $("form").addEventListener("submit", async function (e) {
     e.preventDefault();
     if (sending) return;
     updateDeadline();
-    if ($("sigOnly").checked) { await submitSignatureOnly(); return; }
     var errs = [], bad = [];
     function need(ok, msg, el) { if (!ok) { errs.push(msg); if (el) bad.push(el); } }
     var s = STUDENTS[sel.value];
@@ -409,7 +411,7 @@ button { font: inherit; cursor: pointer; border-radius: 6px; }
     need(/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(mail), "Indiquez une adresse email valide.", $("email"));
     need(/^\+?\d{9,13}$/.test(tel), "Indiquez un numéro de téléphone valide (9 à 13 chiffres).", $("tel"));
     need(!!adr, "Indiquez votre adresse.", $("adresse"));
-    need(hasInk, "Signez dans le cadre prévu.");
+    need(hasInk || loaded, "Signez dans le cadre prévu.");
     need($("certify").checked, "Cochez la case de certification.", $("certify"));
     ["code","student","matricule","nom","prenoms","naissance","lieu","email","tel","adresse"].forEach(function (id) { $(id).removeAttribute("aria-invalid"); });
     bad.forEach(function (el) { el.setAttribute("aria-invalid", "true"); });
@@ -428,9 +430,32 @@ button { font: inherit; cursor: pointer; border-radius: 6px; }
       listeMatricule: s ? s[0] : null,
       corrige: !s || mat !== s[0] || norm(nom) !== norm(s[1]) || norm(pren) !== norm(s[2]),
       civilite: civ, genre: gen, naissance: naiss, lieu: lieu, email: mail, telephone: tel, adresse: adr,
-      signature: pad.toDataURL("image/png")
+      signature: hasInk ? pad.toDataURL("image/png") : null,
+      keepSignature: !hasInk && loaded
     };
-    await post(payload);
+    sending = true; $("fs").disabled = true; $("submit").textContent = "Envoi…";
+    try {
+      var res = await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify(payload) });
+      var out = await res.json();
+      if (out.ok) {
+        banner("");
+        $("form").hidden = true; $("done").hidden = false;
+        window.scrollTo(0, 0);
+      } else if (out.error === "code") {
+        banner("Code d'accès incorrect. Vérifiez-le auprès de l'organisateur.", "warn");
+        $("code").setAttribute("aria-invalid", "true");
+      } else if (out.error === "closed") {
+        banner("Le formulaire est fermé depuis le lundi 16 novembre 2026.", "warn");
+      } else if (out.error === "invalid") {
+        banner("Une information est refusée : " + (out.message || "vérifiez le formulaire") + "", "warn");
+      } else {
+        banner("Le service a rencontré une erreur. Réessayez dans une minute.", "warn");
+      }
+    } catch (err) {
+      banner("L'envoi a échoué. Vérifiez votre connexion puis réessayez.", "warn");
+    } finally {
+      sending = false; $("submit").textContent = "Envoyer ma fiche"; updateDeadline();
+    }
   });
 
   $("againBtn").addEventListener("click", function () {
