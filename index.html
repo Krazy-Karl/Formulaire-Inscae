@@ -197,7 +197,7 @@ button { font: inherit; cursor: pointer; border-radius: 6px; }
   "use strict";
   // Colle ici l'adresse du déploiement Apps Script (elle se termine par /exec).
   var SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxny768ZbD97nbIq9KGXD8NwMwp5uQs93P2VR1OdiZpzKVGjpLX-FNxi9f3Jo0eF_3n5Q/exec";
-  var DEADLINE = new Date("2026-11-16T23:59:59+03:00");
+  var DEADLINE = new Date("2026-11-12T09:45:00+03:00");
   var STUDENTS = [
     ["MCI 19 295","ANDRIAMAMBAZAFY","Ratsisa Mendrika"],
     ["MCI 19 296","ANDRIAMANANTSOA","Natana Tsiresy"],
@@ -283,7 +283,7 @@ button { font: inherit; cursor: pointer; border-radius: 6px; }
     if (closed) {
       $("countdown").textContent = "Formulaire fermé";
       $("stamp").classList.add("closed");
-      banner("Le formulaire est fermé depuis le lundi 16 novembre 2026.", "warn");
+      banner("Le formulaire est fermé : toutes les fiches ont été reçues. Merci !", "warn");
     } else {
       var d = Math.floor(left / 86400000), h = Math.floor((left % 86400000) / 3600000);
       $("countdown").textContent = d >= 1 ? "(il reste " + d + " jour" + (d > 1 ? "s" : "") + ")" : "(il reste " + h + " h)";
@@ -358,7 +358,7 @@ button { font: inherit; cursor: pointer; border-radius: 6px; }
     if (!code) errs.push("Saisissez le code d'accès tout en haut.");
     if (!s) errs.push("Choisissez votre nom dans la liste.");
     if (!dob) errs.push("Indiquez votre date de naissance.");
-    if (closed) errs = ["Le formulaire est fermé depuis le lundi 16 novembre 2026."];
+    if (closed) errs = ["Le formulaire est fermé : toutes les fiches ont été reçues. Merci !"];
     if (SCRIPT_URL.indexOf("https://") !== 0) errs = ["Le formulaire n'est pas encore configuré."];
     if (errs.length) { lookupMsg(errs.join(" "), "warn"); return; }
     var btn = $("lookupBtn"); btn.disabled = true; btn.textContent = "Recherche…"; lookupMsg("");
@@ -373,7 +373,7 @@ button { font: inherit; cursor: pointer; border-radius: 6px; }
       } else if (out.error === "locked") {
         lookupMsg("Trop d'essais pour ce nom. Réessayez dans une heure ou contactez l'organisateur.", "warn");
       } else if (out.error === "closed") {
-        lookupMsg("Le formulaire est fermé depuis le lundi 16 novembre 2026.", "warn");
+        lookupMsg("Le formulaire est fermé : toutes les fiches ont été reçues. Merci !", "warn");
       } else if (out.error === "nomatch") {
         lookupMsg("Aucune fiche trouvée avec ce nom et cette date de naissance. Vérifiez-les, ou remplissez la fiche si vous ne l'avez pas encore envoyée.", "warn");
       } else {
@@ -420,7 +420,7 @@ button { font: inherit; cursor: pointer; border-radius: 6px; }
     ["code","student","matricule","nom","prenoms","naissance","lieu","email","tel","adresse"].forEach(function (id) { $(id).removeAttribute("aria-invalid"); });
     bad.forEach(function (el) { el.setAttribute("aria-invalid", "true"); });
     var box = $("errors");
-    if (closed) errs = ["Le formulaire est fermé depuis le lundi 16 novembre 2026."];
+    if (closed) errs = ["Le formulaire est fermé : toutes les fiches ont été reçues. Merci !"];
     if (SCRIPT_URL.indexOf("https://") !== 0) errs = ["Le formulaire n'est pas encore configuré."];
     if (errs.length) {
       box.textContent = "";
@@ -449,7 +449,7 @@ button { font: inherit; cursor: pointer; border-radius: 6px; }
         banner("Code d'accès incorrect. Vérifiez-le auprès de l'organisateur.", "warn");
         $("code").setAttribute("aria-invalid", "true");
       } else if (out.error === "closed") {
-        banner("Le formulaire est fermé depuis le lundi 16 novembre 2026.", "warn");
+        banner("Le formulaire est fermé : toutes les fiches ont été reçues. Merci !", "warn");
       } else if (out.error === "invalid") {
         banner("Une information est refusée : " + (out.message || "vérifiez le formulaire") + "", "warn");
       } else {
